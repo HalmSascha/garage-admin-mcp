@@ -48,7 +48,7 @@ All configuration is via environment variables (prefix `GARAGE_ADMIN_`):
 
 | Variable | Required | Default | Description |
 | --- | --- | --- | --- |
-| `GARAGE_ADMIN_URL` | yes | — | Base URL of the Garage admin API, e.g. `http://192.168.178.11:3903` |
+| `GARAGE_ADMIN_URL` | yes | — | Base URL of the Garage admin API, e.g. `http://192.0.2.10:3903` |
 | `GARAGE_ADMIN_TOKEN` | yes | — | Bearer token for the admin API. **Use a scoped admin-token** (`garage admin-token create --scope ListBuckets,GetBucketInfo,ListKeys,GetKeyInfo,GetClusterStatus,GetClusterHealth,GetClusterStatistics,GetClusterLayout,GetNodeInfo,GetNodeStatistics ...`) rather than the static master `admin_token` from `garage.toml` — Garage's own docs recommend against using master tokens. |
 | `GARAGE_ADMIN_READ_ONLY` | no | `true` | Reserved for V2; currently has no effect since only read tools exist. |
 | `GARAGE_ADMIN_HTTP_HOST` | no | `0.0.0.0` | Host to bind the MCP HTTP transport to. |
@@ -62,7 +62,7 @@ development).
 
 ```bash
 uv sync
-export GARAGE_ADMIN_URL=http://192.168.178.11:3903
+export GARAGE_ADMIN_URL=http://192.0.2.10:3903
 export GARAGE_ADMIN_TOKEN=<your-scoped-admin-token>
 uv run garage-admin-mcp
 ```

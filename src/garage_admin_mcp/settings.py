@@ -16,7 +16,7 @@ class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_prefix="GARAGE_ADMIN_", env_file=".env", extra="ignore")
 
     url: str = Field(
-        description="Base URL of the Garage admin API, e.g. http://192.168.178.11:3903",
+        description="Base URL of the Garage admin API, e.g. http://192.0.2.10:3903",
     )
     token: str = Field(
         description=(
