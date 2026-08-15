@@ -40,6 +40,22 @@ class Settings(BaseSettings):
         default=10.0, description="Timeout for requests to the Garage admin API."
     )
 
+    s3_url: str | None = Field(
+        default=None,
+        description=(
+            "Base URL of Garage's S3 API (not the admin API), e.g. "
+            "http://192.0.2.10:3900. Optional: when this and "
+            "s3_access_key_id/s3_secret_access_key are all set, the "
+            "read-only list_s3_objects/get_s3_object tools are additionally "
+            "registered. These use Garage-side, bucket-scoped S3 "
+            "credentials, not the admin token above, and are independent "
+            "of read_only - object writes are out of scope regardless."
+        ),
+    )
+    s3_access_key_id: str | None = Field(default=None, description="S3 access key ID (see s3_url).")
+    s3_secret_access_key: str | None = Field(default=None, description="S3 secret access key (see s3_url).")
+    s3_region: str = Field(default="garage", description="S3 region name Garage was configured with.")
+
 
 def get_settings() -> Settings:
     return Settings()  # type: ignore[call-arg]  # values come from env

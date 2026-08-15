@@ -9,6 +9,7 @@ authors = [
 ]
 requires-python = ">=3.12"
 dependencies = [
+    "boto3>=1.43.72",
     "fastmcp>=3.4.7",
     "httpx>=0.28.1",
     "pydantic>=2.13.4",
@@ -24,6 +25,7 @@ build-backend = "uv_build"
 
 [dependency-groups]
 dev = [
+    "moto[s3]>=5.2.2",
     "pytest>=9.1.1",
     "pytest-asyncio>=1.4.0",
     "respx>=0.23.1",

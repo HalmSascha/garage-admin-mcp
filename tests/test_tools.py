@@ -118,3 +118,31 @@ async def test_delete_key_rejects_mismatched_confirm_id_without_calling_garage()
 
     with pytest.raises(ValueError, match="does not match"):
         await tools["delete_key"](id="abc", confirm_id="xyz")
+
+
+@pytest.mark.asyncio
+async def test_s3_tools_not_registered_without_s3_credentials() -> None:
+    settings = Settings(url="http://garage.test:3903", token="test-token")
+    assert settings.s3_url is None
+
+    app = create_app(settings)
+    tools = await app.list_tools()
+
+    assert "list_s3_objects" not in {t.name for t in tools}
+    assert "get_s3_object" not in {t.name for t in tools}
+
+
+@pytest.mark.asyncio
+async def test_s3_tools_registered_when_s3_credentials_configured() -> None:
+    settings = Settings(
+        url="http://garage.test:3903",
+        token="test-token",
+        s3_url="http://garage.test:3900",
+        s3_access_key_id="AKIA...",
+        s3_secret_access_key="secret",
+    )
+
+    app = create_app(settings)
+    tools = await app.list_tools()
+
+    assert {"list_s3_objects", "get_s3_object"} <= {t.name for t in tools}

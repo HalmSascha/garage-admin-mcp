@@ -2,14 +2,17 @@
 
 An [MCP](https://modelcontextprotocol.io/) server for the [Garage](https://garagehq.deuxfleurs.fr/) S3-compatible
 object storage **Admin API** — bucket management, access-key management and
-permission assignment, exposed as MCP tools for LLM agents.
+permission assignment, exposed as MCP tools for LLM agents. It optionally
+also exposes a couple of read-only S3 **object** tools (list/get), so a
+single server can cover both "manage the cluster" and "look at what's in a
+bucket" without needing a second, generic S3 MCP server alongside it.
 
-Garage itself is S3-compatible, so plain object access (get/put/list
-objects) is already well covered by generic S3 MCP servers such as
-[txn2/mcp-s3](https://github.com/txn2/mcp-s3). This project instead covers
-Garage's *administration* API (cluster status, buckets, keys, permissions —
-served on a separate port, `3903` by default), which generic S3 tools don't
-and can't reach.
+The Admin API (cluster status, buckets, keys, permissions) is served on a
+separate port from plain S3 object access (`3903` vs. `3900` by default) —
+generic S3 MCP servers such as [txn2/mcp-s3](https://github.com/txn2/mcp-s3)
+only reach the latter. This project's core focus is the *administration*
+side that those tools can't reach; see [S3 object tools](#s3-object-tools-optional)
+for the (deliberately narrow) object-access addition.
 
 ## Status
 
@@ -57,6 +60,29 @@ Out of scope even in V2 (use the `garage` CLI or web UI instead): CORS
 rules, lifecycle rules, cluster layout changes, repair operations,
 admin-token management, and everything not listed above.
 
+### S3 object tools (optional)
+
+| Tool | Description |
+| --- | --- |
+| `list_s3_objects` | List objects (key, size, last-modified) in a bucket, optionally by prefix |
+| `get_s3_object` | Read the text content of one object (UTF-8 only; truncated past `max_bytes`) |
+
+These talk to Garage's **S3 API** (not the Admin API) and are only
+registered when `GARAGE_ADMIN_S3_URL`, `GARAGE_ADMIN_S3_ACCESS_KEY_ID` and
+`GARAGE_ADMIN_S3_SECRET_ACCESS_KEY` are all set — a deployment that only
+needs cluster/bucket/key administration can simply leave them unset.
+
+They are read-only regardless of `GARAGE_ADMIN_READ_ONLY`: object writes
+were never in scope for this pair of tools, so there's no
+`GARAGE_ADMIN_READ_ONLY=false`-gated `put_s3_object`. Which buckets are
+actually reachable is controlled entirely by the configured S3
+credentials' own Garage-side permissions (`garage bucket allow`/`deny`),
+not by anything in this server — use a bucket- and read-scoped key, not
+one of your backup-admin keys.
+
+`get_s3_object` only supports UTF-8 text objects; binary content raises an
+error instead of returning garbled or base64 output.
+
 ### Safety: delete confirmation
 
 `delete_bucket` and `delete_key` both require a `confirm_id` argument that
@@ -95,6 +121,10 @@ All configuration is via environment variables (prefix `GARAGE_ADMIN_`):
 | `GARAGE_ADMIN_HTTP_HOST` | no | `0.0.0.0` | Host to bind the MCP HTTP transport to. |
 | `GARAGE_ADMIN_HTTP_PORT` | no | `8000` | Port to bind the MCP HTTP transport to. |
 | `GARAGE_ADMIN_REQUEST_TIMEOUT_SECONDS` | no | `10.0` | Timeout for requests to the Garage admin API. |
+| `GARAGE_ADMIN_S3_URL` | no | — | Base URL of Garage's **S3** API (not the admin API), e.g. `http://192.0.2.10:3900`. Set together with the two variables below to enable the [S3 object tools](#s3-object-tools-optional). |
+| `GARAGE_ADMIN_S3_ACCESS_KEY_ID` | no | — | S3 access key ID. Use a bucket- and read-scoped key, not a backup-admin key. |
+| `GARAGE_ADMIN_S3_SECRET_ACCESS_KEY` | no | — | S3 secret access key. |
+| `GARAGE_ADMIN_S3_REGION` | no | `garage` | S3 region name Garage was configured with (`s3_api.s3_region` in `garage.toml`). |
 
 A `.env` file in the working directory is also read (useful for local
 development).
