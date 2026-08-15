@@ -1,6 +1,6 @@
 [project]
 name = "garage-admin-mcp"
-version = "0.1.0"
+version = "1.0.0"
 description = "MCP server for the Garage (deuxfleurs) S3-compatible storage Admin API - bucket, key and permission management as MCP tools."
 readme = "README.md"
 license = "MIT"
