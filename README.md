@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="assets/icon.svg" alt="garage-admin-mcp icon" width="128" height="128">
+</p>
+
 # garage-admin-mcp
 
 An [MCP](https://modelcontextprotocol.io/) server for the [Garage](https://garagehq.deuxfleurs.fr/) S3-compatible
@@ -13,6 +17,15 @@ generic S3 MCP servers such as [txn2/mcp-s3](https://github.com/txn2/mcp-s3)
 only reach the latter. This project's core focus is the *administration*
 side that those tools can't reach; see [S3 object tools](#s3-object-tools-optional)
 for the (deliberately narrow) object-access addition.
+
+> 🤖 **Built via vibe coding with [Claude Code](https://claude.com/claude-code).**
+> The vast majority of this codebase — design, implementation, tests, and
+> this README — was written by Claude Code in an agentic coding session,
+> directed and reviewed by a human throughout (scope decisions, security
+> trade-offs such as the delete-confirmation and no-secret-exposure rules
+> below, and end-to-end verification against a real Garage cluster before
+> anything shipped). Flagged here for transparency, not as a disclaimer to
+> lower your guard — review the code as you would any dependency.
 
 ## Status
 
@@ -158,6 +171,29 @@ uv run garage-admin-mcp
 
 The server serves streamable-HTTP MCP at `http://<host>:<port>/mcp`, and a
 plain-text liveness check at `/healthz`.
+
+## Docker image
+
+Multi-arch images (**linux/amd64** and **linux/arm64**, e.g. for Raspberry
+Pi hosts) are built via [GitHub Actions](.github/workflows/docker-publish.yml)
+and published to GHCR:
+
+```bash
+docker pull ghcr.io/saschahalm/garage-admin-mcp:latest
+
+docker run -d \
+  -p 8000:8000 \
+  -e GARAGE_ADMIN_URL=http://192.0.2.10:3903 \
+  -e GARAGE_ADMIN_TOKEN=<your-scoped-admin-token> \
+  ghcr.io/saschahalm/garage-admin-mcp:latest
+```
+
+Tags: `latest` (tracks `main`), `X.Y.Z`/`X.Y` for tagged releases, and a
+`sha-<commit>` tag for every build. To build locally instead:
+
+```bash
+docker build -t garage-admin-mcp .
+```
 
 ## Development
 
