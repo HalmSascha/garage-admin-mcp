@@ -1,9 +1,13 @@
 """garage-admin-mcp: MCP server for the Garage (deuxfleurs) Admin API.
 
-Exposes Garage's cluster/bucket/key admin operations as MCP tools. V1 is
-read-only by design (GARAGE_ADMIN_READ_ONLY=true is the default) - write
-tools (create/delete buckets and keys, permission changes) are added in a
-later phase and gated behind an explicit opt-in once reviewed.
+Exposes Garage's cluster/bucket/key admin operations as MCP tools.
+Read-only tools (cluster/bucket/key info) are always registered. Write
+tools (create/update/delete buckets and keys, permission changes) are only
+registered when GARAGE_ADMIN_READ_ONLY is explicitly set to false - the
+default is true, so a fresh deployment is read-only until an operator opts
+in. The token used to talk to Garage must independently have the matching
+write scopes (see README.md) - the read_only flag only controls which
+tools this server *offers*, it is not itself a security boundary.
 """
 
 from __future__ import annotations
@@ -19,7 +23,7 @@ from starlette.responses import PlainTextResponse
 from .client import GarageAdminClient
 from .context import set_client
 from .settings import Settings, get_settings
-from .tools import buckets, cluster, keys
+from .tools import buckets, buckets_write, cluster, keys, keys_write, permissions
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -49,12 +53,15 @@ def create_app(settings: Settings | None = None) -> FastMCP:
     keys.register(mcp)
 
     if not settings.read_only:
-        # Write tools land in a later phase (see Plane issue GAMCP-9) - not
-        # implemented yet, so read_only=false currently has no extra effect
-        # beyond this log line.
         logger.warning(
-            "GARAGE_ADMIN_READ_ONLY=false, but write tools are not implemented yet (V1 is read-only only)."
+            "GARAGE_ADMIN_READ_ONLY=false: registering write tools "
+            "(bucket/key create-update-delete, permission changes). Make "
+            "sure the configured GARAGE_ADMIN_TOKEN actually has the "
+            "matching write scopes."
         )
+        buckets_write.register(mcp)
+        keys_write.register(mcp)
+        permissions.register(mcp)
 
     @mcp.custom_route("/healthz", methods=["GET"])
     async def healthz(_request: Request) -> PlainTextResponse:

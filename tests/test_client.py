@@ -62,3 +62,75 @@ async def test_error_response_raises_garage_admin_error(client: GarageAdminClien
 
     assert exc_info.value.status_code == 403
     assert exc_info.value.body == {"error": "Forbidden", "code": "Forbidden"}
+
+
+@pytest.mark.asyncio
+@respx.mock
+async def test_create_bucket_sends_global_alias(client: GarageAdminClient) -> None:
+    route = respx.post("http://garage.test:3903/v2/CreateBucket").mock(
+        return_value=httpx.Response(200, json={"id": "newbucket"})
+    )
+
+    await client.create_bucket(global_alias="my-bucket")
+
+    import json
+
+    assert json.loads(route.calls.last.request.content) == {"globalAlias": "my-bucket"}
+
+
+@pytest.mark.asyncio
+@respx.mock
+async def test_update_bucket_sends_both_quota_fields_together(client: GarageAdminClient) -> None:
+    route = respx.post("http://garage.test:3903/v2/UpdateBucket").mock(return_value=httpx.Response(200, json={}))
+
+    await client.update_bucket("bucket1", quotas_max_size=1000)
+
+    import json
+
+    body = json.loads(route.calls.last.request.content)
+    assert body == {"quotas": {"maxSize": 1000, "maxObjects": None}}
+    assert route.calls.last.request.url.params["id"] == "bucket1"
+
+
+@pytest.mark.asyncio
+@respx.mock
+async def test_delete_bucket_passes_id_as_query_param(client: GarageAdminClient) -> None:
+    route = respx.post("http://garage.test:3903/v2/DeleteBucket").mock(return_value=httpx.Response(204))
+
+    await client.delete_bucket("bucket1")
+
+    assert route.calls.last.request.url.params["id"] == "bucket1"
+
+
+@pytest.mark.asyncio
+@respx.mock
+async def test_allow_bucket_key_sends_permissions_object(client: GarageAdminClient) -> None:
+    route = respx.post("http://garage.test:3903/v2/AllowBucketKey").mock(
+        return_value=httpx.Response(200, json={})
+    )
+
+    await client.allow_bucket_key("bucket1", "key1", read=True)
+
+    import json
+
+    assert json.loads(route.calls.last.request.content) == {
+        "bucketId": "bucket1",
+        "accessKeyId": "key1",
+        "permissions": {"read": True, "write": False, "owner": False},
+    }
+
+
+@pytest.mark.asyncio
+@respx.mock
+async def test_import_key_sends_secret_in_body(client: GarageAdminClient) -> None:
+    route = respx.post("http://garage.test:3903/v2/ImportKey").mock(return_value=httpx.Response(200, json={}))
+
+    await client.import_key("AKIA...", "supersecret", name="imported")
+
+    import json
+
+    assert json.loads(route.calls.last.request.content) == {
+        "accessKeyId": "AKIA...",
+        "secretAccessKey": "supersecret",
+        "name": "imported",
+    }
