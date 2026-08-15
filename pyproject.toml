@@ -1,0 +1,38 @@
+[project]
+name = "garage-admin-mcp"
+version = "0.1.0"
+description = "MCP server for the Garage (deuxfleurs) S3-compatible storage Admin API - bucket, key and permission management as MCP tools."
+readme = "README.md"
+license = "MIT"
+authors = [
+    { name = "Sascha Halm", email = "sascha@halm.me" }
+]
+requires-python = ">=3.12"
+dependencies = [
+    "fastmcp>=3.4.7",
+    "httpx>=0.28.1",
+    "pydantic>=2.13.4",
+    "pydantic-settings>=2.15.0",
+]
+
+[project.scripts]
+garage-admin-mcp = "garage_admin_mcp:main"
+
+[build-system]
+requires = ["uv_build>=0.12.5,<0.13.0"]
+build-backend = "uv_build"
+
+[dependency-groups]
+dev = [
+    "pytest>=9.1.1",
+    "pytest-asyncio>=1.4.0",
+    "respx>=0.23.1",
+    "ruff>=0.16.3",
+]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+
+[tool.ruff]
+line-length = 110
+target-version = "py312"
