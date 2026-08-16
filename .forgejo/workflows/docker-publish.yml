@@ -18,7 +18,7 @@ jobs:
       - name: Clone repository
         run: |
           git clone --depth 1 --branch "${{ github.ref_name }}" \
-            "https://git:${{ secrets.GITHUB_TOKEN }}@192.168.178.11:3000/${{ github.repository }}.git" .
+            "http://git:${{ secrets.GITHUB_TOKEN }}@192.168.178.11:3000/${{ github.repository }}.git" .
 
       - name: Build image
         run: |
