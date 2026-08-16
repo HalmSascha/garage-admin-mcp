@@ -8,6 +8,9 @@ on:
 jobs:
   build-and-push:
     runs-on: docker
+    defaults:
+      run:
+        shell: sh
     steps:
       - name: Install git
         run: apk add --no-cache git
