@@ -4,6 +4,9 @@
 
 # garage-admin-mcp
 
+> **Forge mirror.** The canonical repository is on [GitHub](https://github.com/HalmSascha/garage-admin-mcp); an identical mirror is kept on [Codeberg](https://codeberg.org/saschahalm/garage-admin-mcp).
+> Issues and pull requests are handled on GitHub and are disabled on the mirror.
+
 An [MCP](https://modelcontextprotocol.io/) server for the [Garage](https://garagehq.deuxfleurs.fr/) S3-compatible
 object storage **Admin API** — bucket management, access-key management and
 permission assignment, exposed as MCP tools for LLM agents. It optionally
