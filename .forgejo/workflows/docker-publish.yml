@@ -1,0 +1,33 @@
+name: Build and publish Docker image
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build-and-push:
+    runs-on: docker
+    defaults:
+      run:
+        shell: sh
+    steps:
+      - name: Install git
+        run: apk add --no-cache git
+
+      - name: Clone repository
+        run: |
+          git clone --depth 1 --branch "${{ github.ref_name }}" \
+            "http://git:${{ secrets.GITHUB_TOKEN }}@192.168.178.11:3000/${{ github.repository }}.git" .
+
+      - name: Build image
+        run: |
+          docker build \
+            -t 192.168.178.11:5000/garage-admin-mcp:latest \
+            -t "192.168.178.11:5000/garage-admin-mcp:${{ github.sha }}" \
+            .
+
+      - name: Push image
+        run: |
+          docker push 192.168.178.11:5000/garage-admin-mcp:latest
+          docker push "192.168.178.11:5000/garage-admin-mcp:${{ github.sha }}"
